@@ -8,6 +8,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ServiceCategory extends Model
 {
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'slug',
+        'description',
+        'status',
+        'sort_order',
+    ];
+
+    /**
      * Get the services belonging to this category.
      */
     public function services(): HasMany
@@ -15,3 +28,4 @@ class ServiceCategory extends Model
         return $this->hasMany(Service::class);
     }
 }
+
