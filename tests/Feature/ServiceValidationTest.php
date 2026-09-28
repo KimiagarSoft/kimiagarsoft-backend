@@ -251,7 +251,6 @@ class ServiceValidationTest extends TestCase
         $response->assertStatus(404);
     }
 
-
     /**
      * Services are paginated correctly.
      */
@@ -289,6 +288,104 @@ class ServiceValidationTest extends TestCase
     }
 
     /**
+     * Services can be filtered by status.
+     */
+    public function test_services_can_be_filtered_by_status(): void
+    {
+        $category = $this->createCategory();
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'Published Service',
+            'slug' => 'published-service',
+            'short_description' => 'Published service.',
+            'description' => 'Published service description.',
+            'status' => 'published',
+            'sort_order' => 1,
+        ]);
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'Draft Service',
+            'slug' => 'draft-service',
+            'short_description' => 'Draft service.',
+            'description' => 'Draft service description.',
+            'status' => 'draft',
+            'sort_order' => 2,
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/services?status=published'
+        );
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(1, 'data');
+
+        $response->assertJsonPath(
+            'data.0.title',
+            'Published Service'
+        );
+
+        $response->assertJsonPath(
+            'data.0.status',
+            'published'
+        );
+    }
+
+    /**
+     * Services can be filtered by service category.
+     */
+    public function test_services_can_be_filtered_by_service_category(): void
+    {
+        $categoryOne = $this->createCategory();
+
+        $categoryTwo = ServiceCategory::create([
+            'name' => 'SEO',
+            'slug' => 'seo',
+            'description' => 'SEO services.',
+            'status' => 'active',
+            'sort_order' => 1,
+        ]);
+
+        Service::create([
+            'service_category_id' => $categoryOne->id,
+            'title' => 'Web Design Service',
+            'slug' => 'web-design-service',
+            'short_description' => 'Web design service.',
+            'description' => 'Web design service description.',
+            'status' => 'published',
+            'sort_order' => 1,
+        ]);
+
+        Service::create([
+            'service_category_id' => $categoryTwo->id,
+            'title' => 'SEO Service',
+            'slug' => 'seo-service',
+            'short_description' => 'SEO service.',
+            'description' => 'SEO service description.',
+            'status' => 'published',
+            'sort_order' => 2,
+        ]);
+
+        $response = $this->getJson(
+            "/api/v1/services?service_category_id={$categoryTwo->id}"
+        );
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(1, 'data');
+
+        $response->assertJsonPath(
+            'data.0.title',
+            'SEO Service'
+        );
+
+        $response->assertJsonPath(
+            'data.0.service_category_id',
+            $categoryTwo->id
+        );
+    }
+
+    /**
      * Create a service category for tests.
      */
     private function createCategory(): ServiceCategory
@@ -318,3 +415,4 @@ class ServiceValidationTest extends TestCase
         ]);
     }
 }
+

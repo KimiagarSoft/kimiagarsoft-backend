@@ -14,16 +14,27 @@ class ServiceController extends Controller
 {
     public function __construct(
         private readonly ServiceManagementService $serviceManagementService
-    ) {
-    }
+    ) {}
 
     /**
-     * Display a paginated listing of services.
+     * Display a filtered and paginated listing of services.
      */
     public function index()
     {
-        $services = Service::query()
-            ->paginate(10);
+        $query = Service::query();
+
+        if (request()->filled('status')) {
+            $query->where('status', request('status'));
+        }
+
+        if (request()->filled('service_category_id')) {
+            $query->where(
+                'service_category_id',
+                request('service_category_id')
+            );
+        }
+
+        $services = $query->paginate(10);
 
         return ServiceResource::collection($services);
     }
@@ -73,4 +84,3 @@ class ServiceController extends Controller
         return response()->json(null, 204);
     }
 }
-
