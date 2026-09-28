@@ -17,7 +17,7 @@ class ServiceController extends Controller
     ) {}
 
     /**
-     * Display a filtered and paginated listing of services.
+     * Display a filtered, sorted, and paginated listing of services.
      */
     public function index()
     {
@@ -32,6 +32,26 @@ class ServiceController extends Controller
                 'service_category_id',
                 request('service_category_id')
             );
+        }
+
+        $allowedSorts = [
+            'sort_order',
+            'created_at',
+            'title',
+        ];
+
+        $sort = request('sort');
+
+        if ($sort) {
+            $direction = str_starts_with($sort, '-')
+                ? 'desc'
+                : 'asc';
+
+            $column = ltrim($sort, '-');
+
+            if (in_array($column, $allowedSorts, true)) {
+                $query->orderBy($column, $direction);
+            }
         }
 
         $services = $query->paginate(10);
@@ -84,3 +104,4 @@ class ServiceController extends Controller
         return response()->json(null, 204);
     }
 }
+

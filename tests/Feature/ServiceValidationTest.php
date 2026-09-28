@@ -386,6 +386,102 @@ class ServiceValidationTest extends TestCase
     }
 
     /**
+     * Services can be sorted by sort order ascending.
+     */
+    public function test_services_can_be_sorted_by_sort_order_ascending(): void
+    {
+        $category = $this->createCategory();
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'Service C',
+            'slug' => 'service-c',
+            'short_description' => 'Service C.',
+            'description' => 'Service C description.',
+            'status' => 'published',
+            'sort_order' => 3,
+        ]);
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'Service A',
+            'slug' => 'service-a',
+            'short_description' => 'Service A.',
+            'description' => 'Service A description.',
+            'status' => 'published',
+            'sort_order' => 1,
+        ]);
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'Service B',
+            'slug' => 'service-b',
+            'short_description' => 'Service B.',
+            'description' => 'Service B description.',
+            'status' => 'published',
+            'sort_order' => 2,
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/services?sort=sort_order'
+        );
+
+        $response->assertStatus(200);
+
+        $response->assertJsonPath('data.0.title', 'Service A');
+        $response->assertJsonPath('data.1.title', 'Service B');
+        $response->assertJsonPath('data.2.title', 'Service C');
+    }
+
+    /**
+     * Services can be sorted by sort order descending.
+     */
+    public function test_services_can_be_sorted_by_sort_order_descending(): void
+    {
+        $category = $this->createCategory();
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'Service A',
+            'slug' => 'service-a-desc',
+            'short_description' => 'Service A.',
+            'description' => 'Service A description.',
+            'status' => 'published',
+            'sort_order' => 1,
+        ]);
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'Service B',
+            'slug' => 'service-b-desc',
+            'short_description' => 'Service B.',
+            'description' => 'Service B description.',
+            'status' => 'published',
+            'sort_order' => 2,
+        ]);
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'Service C',
+            'slug' => 'service-c-desc',
+            'short_description' => 'Service C.',
+            'description' => 'Service C description.',
+            'status' => 'published',
+            'sort_order' => 3,
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/services?sort=-sort_order'
+        );
+
+        $response->assertStatus(200);
+
+        $response->assertJsonPath('data.0.title', 'Service C');
+        $response->assertJsonPath('data.1.title', 'Service B');
+        $response->assertJsonPath('data.2.title', 'Service A');
+    }
+
+    /**
      * Create a service category for tests.
      */
     private function createCategory(): ServiceCategory
