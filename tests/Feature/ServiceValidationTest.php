@@ -482,6 +482,86 @@ class ServiceValidationTest extends TestCase
     }
 
     /**
+     * Services can be searched by title.
+     */
+    public function test_services_can_be_searched_by_title(): void
+    {
+        $category = $this->createCategory();
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'Web Design Service',
+            'slug' => 'web-design-service',
+            'short_description' => 'Professional web design.',
+            'description' => 'Complete web design solution.',
+            'status' => 'published',
+            'sort_order' => 1,
+        ]);
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'SEO Service',
+            'slug' => 'seo-service-search-title',
+            'short_description' => 'Professional SEO service.',
+            'description' => 'Complete SEO solution.',
+            'status' => 'published',
+            'sort_order' => 2,
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/services?search=Design'
+        );
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(1, 'data');
+
+        $response->assertJsonPath(
+            'data.0.title',
+            'Web Design Service'
+        );
+    }
+
+    /**
+     * Services can be searched by description.
+     */
+    public function test_services_can_be_searched_by_description(): void
+    {
+        $category = $this->createCategory();
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'Corporate Website',
+            'slug' => 'corporate-website-search-description',
+            'short_description' => 'Professional website service.',
+            'description' => 'Advanced e-commerce development solution.',
+            'status' => 'published',
+            'sort_order' => 1,
+        ]);
+
+        Service::create([
+            'service_category_id' => $category->id,
+            'title' => 'SEO Service',
+            'slug' => 'seo-service-search-description',
+            'short_description' => 'Professional SEO service.',
+            'description' => 'Complete search engine optimization solution.',
+            'status' => 'published',
+            'sort_order' => 2,
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/services?search=e-commerce'
+        );
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(1, 'data');
+
+        $response->assertJsonPath(
+            'data.0.title',
+            'Corporate Website'
+        );
+    }
+
+    /**
      * Create a service category for tests.
      */
     private function createCategory(): ServiceCategory
@@ -511,4 +591,3 @@ class ServiceValidationTest extends TestCase
         ]);
     }
 }
-

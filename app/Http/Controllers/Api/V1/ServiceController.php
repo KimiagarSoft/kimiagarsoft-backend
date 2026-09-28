@@ -17,11 +17,22 @@ class ServiceController extends Controller
     ) {}
 
     /**
-     * Display a filtered, sorted, and paginated listing of services.
+     * Display a searched, filtered, sorted, and paginated listing of services.
      */
     public function index()
     {
         $query = Service::query();
+
+        if (request()->filled('search')) {
+            $search = request('search');
+
+            $query->where(function ($query) use ($search) {
+                $query
+                    ->where('title', 'like', "%{$search}%")
+                    ->orWhere('short_description', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
 
         if (request()->filled('status')) {
             $query->where('status', request('status'));
@@ -104,4 +115,3 @@ class ServiceController extends Controller
         return response()->json(null, 204);
     }
 }
-
