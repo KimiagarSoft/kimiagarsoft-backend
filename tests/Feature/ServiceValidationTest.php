@@ -167,6 +167,91 @@ class ServiceValidationTest extends TestCase
     }
 
     /**
+     * Services can be listed.
+     */
+    public function test_services_can_be_listed(): void
+    {
+        $category = $this->createCategory();
+
+        $this->createService($category);
+
+        $response = $this->getJson('/api/v1/services');
+
+        $response->assertStatus(200);
+
+        $response->assertJsonCount(1, 'data');
+
+        $response->assertJsonPath(
+            'data.0.title',
+            'Corporate Website'
+        );
+
+        $response->assertJsonPath(
+            'data.0.slug',
+            'corporate-website'
+        );
+    }
+
+    /**
+     * An empty service list returns an empty data array.
+     */
+    public function test_empty_service_list_returns_empty_data(): void
+    {
+        $response = $this->getJson('/api/v1/services');
+
+        $response->assertStatus(200);
+
+        $response->assertJsonCount(0, 'data');
+
+        $response->assertJson([
+            'data' => [],
+        ]);
+    }
+
+    /**
+     * A service can be retrieved by ID.
+     */
+    public function test_service_can_be_retrieved(): void
+    {
+        $category = $this->createCategory();
+
+        $service = $this->createService($category);
+
+        $response = $this->getJson(
+            "/api/v1/services/{$service->id}"
+        );
+
+        $response->assertStatus(200);
+
+        $response->assertJsonPath(
+            'data.id',
+            $service->id
+        );
+
+        $response->assertJsonPath(
+            'data.title',
+            'Corporate Website'
+        );
+
+        $response->assertJsonPath(
+            'data.slug',
+            'corporate-website'
+        );
+    }
+
+    /**
+     * Retrieving a non-existent service returns 404.
+     */
+    public function test_retrieving_non_existent_service_returns_not_found(): void
+    {
+        $response = $this->getJson(
+            '/api/v1/services/999999'
+        );
+
+        $response->assertStatus(404);
+    }
+
+    /**
      * Create a service category for tests.
      */
     private function createCategory(): ServiceCategory

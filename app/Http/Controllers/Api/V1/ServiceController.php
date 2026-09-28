@@ -18,6 +18,25 @@ class ServiceController extends Controller
     }
 
     /**
+     * Display a paginated listing of services.
+     */
+    public function index()
+    {
+        $services = Service::query()
+            ->paginate(10);
+
+        return ServiceResource::collection($services);
+    }
+
+    /**
+     * Display the specified service.
+     */
+    public function show(Service $service): ServiceResource
+    {
+        return new ServiceResource($service);
+    }
+
+    /**
      * Store a newly created service.
      */
     public function store(StoreServiceRequest $request): ServiceResource
