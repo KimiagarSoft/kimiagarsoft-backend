@@ -251,6 +251,43 @@ class ServiceValidationTest extends TestCase
         $response->assertStatus(404);
     }
 
+
+    /**
+     * Services are paginated correctly.
+     */
+    public function test_services_are_paginated_correctly(): void
+    {
+        $category = $this->createCategory();
+
+        for ($i = 1; $i <= 15; $i++) {
+            Service::create([
+                'service_category_id' => $category->id,
+                'title' => "Service {$i}",
+                'slug' => "service-{$i}",
+                'short_description' => "Short description {$i}.",
+                'description' => "Description {$i}.",
+                'status' => 'draft',
+                'sort_order' => $i,
+            ]);
+        }
+
+        $pageOne = $this->getJson('/api/v1/services?page=1');
+
+        $pageOne->assertStatus(200);
+        $pageOne->assertJsonCount(10, 'data');
+        $pageOne->assertJsonPath('meta.current_page', 1);
+        $pageOne->assertJsonPath('meta.last_page', 2);
+        $pageOne->assertJsonPath('meta.total', 15);
+
+        $pageTwo = $this->getJson('/api/v1/services?page=2');
+
+        $pageTwo->assertStatus(200);
+        $pageTwo->assertJsonCount(5, 'data');
+        $pageTwo->assertJsonPath('meta.current_page', 2);
+        $pageTwo->assertJsonPath('meta.last_page', 2);
+        $pageTwo->assertJsonPath('meta.total', 15);
+    }
+
     /**
      * Create a service category for tests.
      */
@@ -281,4 +318,3 @@ class ServiceValidationTest extends TestCase
         ]);
     }
 }
-
