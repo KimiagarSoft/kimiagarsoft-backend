@@ -240,6 +240,72 @@ class ServiceValidationTest extends TestCase
     }
 
     /**
+     * A single service response follows the standard resource structure.
+     */
+    public function test_single_service_response_follows_standard_structure(): void
+    {
+        $category = $this->createCategory();
+
+        $service = $this->createService($category);
+
+        $response = $this->getJson(
+            "/api/v1/services/{$service->id}"
+        );
+
+        $response->assertStatus(200);
+
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'service_category_id',
+                'title',
+                'slug',
+                'short_description',
+                'description',
+                'status',
+                'sort_order',
+                'published_at',
+                'created_at',
+                'updated_at',
+            ],
+        ]);
+    }
+
+    /**
+     * A service collection response follows the standard resource structure.
+     */
+    public function test_service_collection_response_follows_standard_structure(): void
+    {
+        $category = $this->createCategory();
+
+        $this->createService($category);
+
+        $response = $this->getJson('/api/v1/services');
+
+        $response->assertStatus(200);
+
+        $response->assertJsonStructure([
+            'data' => [
+                '*' => [
+                    'id',
+                    'service_category_id',
+                    'title',
+                    'slug',
+                    'short_description',
+                    'description',
+                    'status',
+                    'sort_order',
+                    'published_at',
+                    'created_at',
+                    'updated_at',
+                ],
+            ],
+            'links',
+            'meta',
+        ]);
+    }
+
+    /**
      * Retrieving a non-existent service returns 404.
      */
     public function test_retrieving_non_existent_service_returns_not_found(): void
@@ -591,3 +657,4 @@ class ServiceValidationTest extends TestCase
         ]);
     }
 }
+
