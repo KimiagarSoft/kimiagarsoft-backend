@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\ServiceController;
+use App\Models\Project;
 use App\Models\Service;
 use Illuminate\Support\Facades\Route;
 
@@ -30,5 +32,21 @@ Route::prefix('v1')->group(function () {
 
         Route::delete('/services/{service}', [ServiceController::class, 'destroy'])
             ->can('delete', 'service');
+
+        // Projects
+        Route::get('/projects', [ProjectController::class, 'index'])
+            ->can('viewAny', Project::class);
+
+        Route::get('/projects/{project}', [ProjectController::class, 'show'])
+            ->can('view', 'project');
+
+        Route::post('/projects', [ProjectController::class, 'store'])
+            ->can('create', Project::class);
+
+        Route::put('/projects/{project}', [ProjectController::class, 'update'])
+            ->can('update', 'project');
+
+        Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])
+            ->can('delete', 'project');
     });
 });
