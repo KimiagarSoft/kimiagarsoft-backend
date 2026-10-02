@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
@@ -11,6 +12,13 @@ use Tests\TestCase;
 class AuthTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(RoleSeeder::class);
+    }
 
     public function test_user_can_register(): void
     {
@@ -227,4 +235,3 @@ class AuthTest extends TestCase
         $response->assertUnauthorized();
     }
 }
-

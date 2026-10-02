@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -10,10 +11,13 @@ class AuthService
 {
     public function register(array $data): array
     {
+        $authorRole = Role::where('slug', 'author')->firstOrFail();
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
+            'role_id' => $authorRole->id,
         ]);
 
         $token = $user->createToken('api-token')->plainTextToken;
@@ -42,4 +46,3 @@ class AuthService
         ];
     }
 }
-

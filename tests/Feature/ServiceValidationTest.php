@@ -2,15 +2,34 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\Service;
 use App\Models\ServiceCategory;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ServiceValidationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $adminRole = Role::create([
+            'name' => 'Administrator',
+            'slug' => 'admin',
+        ]);
+
+        $admin = User::factory()->create([
+            'role_id' => $adminRole->id,
+        ]);
+
+        Sanctum::actingAs($admin);
+    }
+    
     /**
      * A service requires the required fields.
      */
