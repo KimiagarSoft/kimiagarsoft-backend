@@ -2,7 +2,7 @@
 
 Professional backend API for **KimiagarSoft**, built with **Laravel 12** and designed with an **API-first architecture**.
 
-This project provides the backend foundation and REST API for the future KimiagarSoft frontend and other clients.
+This project provides the backend foundation and REST API for the future KimiagarSoft frontend and other API clients.
 
 ---
 
@@ -22,6 +22,8 @@ PostgreSQL
 
 The backend and frontend are developed as separate applications.
 
+The project follows an **Incremental / Vertical Slice** development approach, allowing each business capability to be implemented, tested, documented, and stabilized before moving to the next domain.
+
 ---
 
 ## Tech Stack
@@ -33,6 +35,7 @@ The backend and frontend are developed as separate applications.
 | API             | REST API                     |
 | Database        | PostgreSQL                   |
 | Authentication  | Laravel Sanctum              |
+| Authorization   | Laravel Policies / Gates     |
 | Testing         | PHPUnit / Laravel Test Suite |
 | Version Control | Git / GitHub                 |
 | Future Frontend | Next.js + TypeScript         |
@@ -51,9 +54,25 @@ The architecture focuses on:
 * PostgreSQL database architecture
 * Eloquent ORM
 * Service-oriented business logic
-* Secure authentication and authorization
+* Secure authentication
+* Role-based authorization
 * Automated testing
 * Maintainable and scalable code
+* Incremental feature development
+
+---
+
+## Development Principles
+
+The project follows several practical development principles:
+
+* **YAGNI** — implement only what is currently needed.
+* **Minimal Refactoring** — avoid unnecessary changes to stable code.
+* **Test Before Moving Forward** — verify each completed feature before continuing.
+* **Incremental Development** — build the system in small, controlled vertical slices.
+* **Stable API Design** — avoid unnecessary breaking changes.
+* **Simple Solutions** — prefer clear and maintainable implementations over unnecessary complexity.
+* **No Repeated Work** — completed and verified features should not be reimplemented without a specific reason.
 
 ---
 
@@ -125,21 +144,117 @@ The backend exposes a versioned REST API under:
 /api/v1
 ```
 
-The current API includes the **Service Management** resource.
+The current API includes:
+
+* Authentication
+* Service Management
+* Role-based authorization for protected resources
+
+---
+
+# Authentication API
+
+Authentication is implemented using **Laravel Sanctum**.
+
+## Register
+
+```http
+POST /api/v1/auth/register
+```
+
+Creates a new user account and returns an authentication token.
+
+---
+
+## Login
+
+```http
+POST /api/v1/auth/login
+```
+
+Authenticates a user and returns an authentication token.
+
+---
+
+## Current User
+
+```http
+GET /api/v1/auth/me
+```
+
+Returns the currently authenticated user.
+
+This endpoint requires a valid Sanctum authentication token.
+
+---
+
+## Logout
+
+```http
+POST /api/v1/auth/logout
+```
+
+Logs out the authenticated user and revokes the current authentication token.
+
+This endpoint requires authentication.
+
+---
+
+## Authentication Header
+
+Protected API endpoints use the following authorization header:
+
+```http
+Authorization: Bearer {token}
+```
+
+---
+
+# Authorization
+
+The API uses Laravel Policies and Gates for authorization.
+
+The current role system contains two roles:
+
+| Role     | Description                                           |
+| -------- | ----------------------------------------------------- |
+| `admin`  | Administrator with management permissions             |
+| `author` | Author role intended for content-related capabilities |
+
+The current Service Management authorization policy allows only administrators to manage services.
+
+### Service Authorization
+
+| User   | Access to Services |
+| ------ | ------------------ |
+| Guest  | Not authenticated  |
+| Author | Forbidden          |
+| Admin  | Authorized         |
+
+Protected service endpoints require both:
+
+1. Authentication
+2. Authorization
+
+Authorization is enforced through `ServicePolicy`.
 
 ---
 
 # Service Management API
 
+Service Management is currently the main completed business domain of the API.
+
 ## Endpoints
 
-| Method | Endpoint                     | Description        |
-| ------ | ---------------------------- | ------------------ |
-| GET    | `/api/v1/services`           | List services      |
-| GET    | `/api/v1/services/{service}` | Retrieve a service |
-| POST   | `/api/v1/services`           | Create a service   |
-| PUT    | `/api/v1/services/{service}` | Update a service   |
-| DELETE | `/api/v1/services/{service}` | Delete a service   |
+| Method | Endpoint                     | Authentication | Description        |
+| ------ | ---------------------------- | -------------- | ------------------ |
+| GET    | `/api/v1/services`           | Required       | List services      |
+| GET    | `/api/v1/services/{service}` | Required       | Retrieve a service |
+| POST   | `/api/v1/services`           | Required       | Create a service   |
+| PUT    | `/api/v1/services/{service}` | Required       | Update a service   |
+| DELETE | `/api/v1/services/{service}` | Required       | Delete a service   |
+
+Service endpoints are protected by both Sanctum authentication and the corresponding authorization policy.
 
 ---
 
@@ -292,238 +407,4 @@ POST /api/v1/services
 }
 ```
 
-### Validation Rules
-
-| Field                 | Required | Rules                   |
-| --------------------- | -------- | ----------------------- |
-| `service_category_id` | Yes      | Integer, must exist     |
-| `title`               | Yes      | String, max 255         |
-| `slug`                | Yes      | String, max 255, unique |
-| `short_description`   | No       | Nullable string         |
-| `description`         | Yes      | String                  |
-| `status`              | Yes      | `draft` or `published`  |
-| `sort_order`          | Yes      | Integer, minimum 0      |
-| `published_at`        | No       | Nullable date           |
-
----
-
-## Update a Service
-
-```http
-PUT /api/v1/services/{service}
-```
-
-The update endpoint supports partial updates. Only the fields that need to be changed have to be provided.
-
-Example:
-
-```json
-{
-    "title": "Professional Web Design",
-    "status": "published"
-}
-```
-
-All update fields are optional.
-
-The same validation rules apply to provided fields, while the `slug` uniqueness rule ignores the current service.
-
----
-
-## Delete a Service
-
-```http
-DELETE /api/v1/services/{service}
-```
-
-A successful deletion returns:
-
-```http
-204 No Content
-```
-
----
-
-## Response Structure
-
-### Single Resource
-
-Single service responses use:
-
-```json
-{
-    "data": {
-        "id": 1
-    }
-}
-```
-
-### Collection
-
-Service collections use:
-
-```json
-{
-    "data": [
-        {
-            "id": 1
-        }
-    ]
-}
-```
-
-### Paginated Collection
-
-Paginated collections contain:
-
-```json
-{
-    "data": [],
-    "links": {},
-    "meta": {}
-}
-```
-
-The response contract is covered by automated feature tests.
-
----
-
-## Error Responses
-
-### Validation Error
-
-Invalid request data returns Laravel's standard validation error response.
-
-Typical HTTP status:
-
-```http
-422 Unprocessable Content
-```
-
-### Resource Not Found
-
-Requesting a service that does not exist returns:
-
-```http
-404 Not Found
-```
-
-The behavior is covered by automated feature tests.
-
----
-
-## Testing
-
-Run the complete automated test suite:
-
-```bash
-php artisan test
-```
-
-Current Service Management coverage includes:
-
-* Service creation
-* Service update
-* Service deletion
-* Service retrieval
-* Service listing
-* Validation
-* Not found handling
-* Pagination
-* Filtering
-* Sorting
-* Searching
-* Response structure
-
----
-
-## Project Structure
-
-```text
-app/
-├── Http/
-│   ├── Controllers/
-│   ├── Requests/
-│   └── Resources/
-├── Models/
-└── Services/
-
-database/
-├── migrations/
-└── seeders/
-
-routes/
-└── api.php
-
-tests/
-├── Feature/
-└── Unit/
-```
-
-The project follows Laravel conventions while keeping application and business logic organized for long-term maintainability.
-
----
-
-## Development Status
-
-The project is currently under active development.
-
-### Completed
-
-* Laravel 12 project foundation
-* PostgreSQL database
-* API-first architecture
-* REST API foundation
-* Laravel Sanctum foundation
-* Database migrations
-* Eloquent models
-* Model relationships
-* Form Request validation
-* Service layer
-* API controllers
-* API Resources
-* Service Management CRUD
-* Pagination
-* Filtering
-* Sorting
-* Searching
-* Response contract testing
-* Automated feature testing
-
-### Upcoming
-
-* API documentation expansion
-* Authentication implementation
-* Authorization
-* Centralized error handling
-* Security hardening
-* Performance optimization
-* CI/CD
-* Production deployment
-* Frontend handoff
-
----
-
-## Frontend
-
-The production frontend is planned as a separate application using:
-
-**Next.js + TypeScript**
-
-The frontend will communicate with this backend through the REST API.
-
----
-
-## Project
-
-**KimiagarSoft**
-
-Website: https://kimiagarsoft.com
-
-Repository: https://github.com/KimiagarSoft/kimiagarsoft-backend
-
----
-
-## License
-
-This project is proprietary software developed for **KimiagarSoft**.
+### Validation Ru
