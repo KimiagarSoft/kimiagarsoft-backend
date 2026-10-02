@@ -2,7 +2,7 @@
 
 Professional backend API for **KimiagarSoft**, built with **Laravel 12** and designed with an **API-first architecture**.
 
-This project provides the backend foundation and REST API for the future KimiagarSoft frontend and other clients.
+This project provides the backend foundation and REST API for the future KimiagarSoft frontend and other API clients.
 
 ---
 
@@ -22,6 +22,8 @@ PostgreSQL
 
 The backend and frontend are developed as separate applications.
 
+The project follows an incremental and vertical-slice development approach, with a focus on maintainability, testability, and minimal unnecessary complexity.
+
 ---
 
 ## Tech Stack
@@ -33,6 +35,7 @@ The backend and frontend are developed as separate applications.
 | API             | REST API                     |
 | Database        | PostgreSQL                   |
 | Authentication  | Laravel Sanctum              |
+| Authorization   | Laravel Policies / Gates     |
 | Testing         | PHPUnit / Laravel Test Suite |
 | Version Control | Git / GitHub                 |
 | Future Frontend | Next.js + TypeScript         |
@@ -54,6 +57,7 @@ The architecture focuses on:
 * Secure authentication and authorization
 * Automated testing
 * Maintainable and scalable code
+* Incremental feature development
 
 ---
 
@@ -125,7 +129,82 @@ The backend exposes a versioned REST API under:
 /api/v1
 ```
 
-The current API includes the **Service Management** resource.
+The current API includes authentication and Service Management functionality.
+
+---
+
+# Authentication API
+
+Authentication is implemented using **Laravel Sanctum**.
+
+## Public Authentication Endpoints
+
+| Method | Endpoint                | Description         |
+| ------ | ----------------------- | ------------------- |
+| POST   | `/api/v1/auth/register` | Register a user     |
+| POST   | `/api/v1/auth/login`    | Authenticate a user |
+
+These endpoints do not require an authentication token.
+
+---
+
+## Protected Authentication Endpoints
+
+The following endpoints require a valid Sanctum authentication token:
+
+| Method | Endpoint              | Description           |
+| ------ | --------------------- | --------------------- |
+| GET    | `/api/v1/auth/me`     | Retrieve current user |
+| POST   | `/api/v1/auth/logout` | Revoke current token  |
+
+Protected endpoints use:
+
+```text
+auth:sanctum
+```
+
+---
+
+# Authorization
+
+The application uses role-based authorization through Laravel Policies and Gates.
+
+## Current Roles
+
+| Role     | Purpose                                 |
+| -------- | --------------------------------------- |
+| `admin`  | Full administrative access              |
+| `author` | Reserved for content/article management |
+
+The initial authorization model intentionally keeps the permission system simple.
+
+There are currently no separate permission records or permission-management UI.
+
+---
+
+## Service Authorization
+
+Service Management is protected by `ServicePolicy`.
+
+All Service API endpoints require authentication and authorization.
+
+The current Service Management policy allows only users with the `admin` role to manage services.
+
+### Authorization behavior
+
+| User   | Result             |
+| ------ | ------------------ |
+| Guest  | `401 Unauthorized` |
+| Author | `403 Forbidden`    |
+| Admin  | Authorized         |
+
+Authorization is applied to:
+
+* View service list
+* View a single service
+* Create a service
+* Update a service
+* Delete a service
 
 ---
 
@@ -140,6 +219,8 @@ The current API includes the **Service Management** resource.
 | POST   | `/api/v1/services`           | Create a service   |
 | PUT    | `/api/v1/services/{service}` | Update a service   |
 | DELETE | `/api/v1/services/{service}` | Delete a service   |
+
+All Service endpoints require authentication and appropriate authorization.
 
 ---
 
@@ -189,12 +270,6 @@ Sort by an allowed field:
 
 ```http
 GET /api/v1/services?sort=sort_order
-```
-
-Ascending order:
-
-```text
-sort=sort_order
 ```
 
 Descending order:
@@ -344,9 +419,9 @@ A successful deletion returns:
 
 ---
 
-## Response Structure
+# Response Structure
 
-### Single Resource
+## Single Resource
 
 Single service responses use:
 
@@ -358,7 +433,7 @@ Single service responses use:
 }
 ```
 
-### Collection
+## Collection
 
 Service collections use:
 
@@ -372,7 +447,7 @@ Service collections use:
 }
 ```
 
-### Paginated Collection
+## Paginated Collection
 
 Paginated collections contain:
 
@@ -388,31 +463,47 @@ The response contract is covered by automated feature tests.
 
 ---
 
-## Error Responses
+# Error Responses
 
-### Validation Error
+The API currently relies primarily on Laravel's standard HTTP error responses.
 
-Invalid request data returns Laravel's standard validation error response.
+## Unauthenticated
 
-Typical HTTP status:
+Requests to protected endpoints without valid authentication return:
+
+```http
+401 Unauthorized
+```
+
+## Forbidden
+
+Authenticated users without the required authorization return:
+
+```http
+403 Forbidden
+```
+
+## Validation Error
+
+Invalid request data returns Laravel's standard validation error response:
 
 ```http
 422 Unprocessable Content
 ```
 
-### Resource Not Found
+## Resource Not Found
 
-Requesting a service that does not exist returns:
+Requesting a resource that does not exist returns:
 
 ```http
 404 Not Found
 ```
 
-The behavior is covered by automated feature tests.
+Error response standardization is intentionally deferred until the dedicated Error Handling phase.
 
 ---
 
-## Testing
+# Testing
 
 Run the complete automated test suite:
 
@@ -420,8 +511,17 @@ Run the complete automated test suite:
 php artisan test
 ```
 
-Current Service Management coverage includes:
+The current test suite covers:
 
+* Authentication
+* User registration
+* User login
+* Sanctum authentication
+* Logout and token revocation
+* User roles
+* Authorization
+* Service policies
+* Service authorization
 * Service creation
 * Service update
 * Service deletion
@@ -435,17 +535,29 @@ Current Service Management coverage includes:
 * Searching
 * Response structure
 
+The latest full test run:
+
+```text
+55 passed
+172 assertions
+0 failures
+```
+
 ---
 
-## Project Structure
+# Project Structure
 
 ```text
 app/
 ├── Http/
 │   ├── Controllers/
+│   │   └── Api/
+│   │       └── V1/
 │   ├── Requests/
+│   │   └── Services/
 │   └── Resources/
 ├── Models/
+├── Policies/
 └── Services/
 
 database/
@@ -464,38 +576,46 @@ The project follows Laravel conventions while keeping application and business l
 
 ---
 
-## Development Status
+# Development Status
 
 The project is currently under active development.
 
-### Completed
+## Completed
 
 * Laravel 12 project foundation
 * PostgreSQL database
 * API-first architecture
 * REST API foundation
-* Laravel Sanctum foundation
-* Database migrations
-* Eloquent models
-* Model relationships
-* Form Request validation
-* Service layer
-* API controllers
-* API Resources
+* Laravel Sanctum authentication
+* User registration
+* User login
+* Token authentication
+* Logout and token revocation
+* Role system
+* Admin role
+* Author role
+* User-role relationships
+* Service authorization policy
+* Laravel Gate / Policy authorization
 * Service Management CRUD
 * Pagination
 * Filtering
 * Sorting
 * Searching
+* Form Request validation
+* Service layer
+* API Resources
 * Response contract testing
 * Automated feature testing
 
-### Upcoming
+## Currently in Progress
 
 * API documentation expansion
-* Authentication implementation
-* Authorization
-* Centralized error handling
+* Additional business domains
+
+## Deferred
+
+* Centralized error response standardization
 * Security hardening
 * Performance optimization
 * CI/CD
@@ -504,7 +624,21 @@ The project is currently under active development.
 
 ---
 
-## Frontend
+# Development Principles
+
+The project follows several development principles:
+
+* YAGNI — build what is actually needed
+* Minimal Refactoring
+* Test Before Moving Forward
+* Avoid repeating completed work
+* Incremental / Vertical Slice development
+* Keep the API stable and predictable
+* Prefer simple solutions over unnecessary abstraction
+
+---
+
+# Frontend
 
 The production frontend is planned as a separate application using:
 
@@ -514,16 +648,20 @@ The frontend will communicate with this backend through the REST API.
 
 ---
 
-## Project
+# Project
 
 **KimiagarSoft**
 
-Website: https://kimiagarsoft.com
+Website:
 
-Repository: https://github.com/KimiagarSoft/kimiagarsoft-backend
+https://kimiagarsoft.com
+
+Repository:
+
+https://github.com/KimiagarSoft/kimiagarsoft-backend
 
 ---
 
-## License
+# License
 
 This project is proprietary software developed for **KimiagarSoft**.
