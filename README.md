@@ -1,8 +1,24 @@
 # KimiagarSoft Backend
 
-Backend API پروژه KimiagarSoft، ساخته‌شده با Laravel و PostgreSQL با رویکرد API-first و معماری Incremental / Vertical Slice.
+REST API backend for **KimiagarSoft**, built with Laravel and PostgreSQL.
 
-این پروژه به‌عنوان Backend مستقل برای وب‌سایت KimiagarSoft توسعه داده شده و در آینده می‌تواند توسط Frontend مبتنی بر Next.js و TypeScript مصرف شود.
+The project follows an **API-first**, **Incremental / Vertical Slice** architecture and is designed to serve a future frontend based on **Next.js + TypeScript**.
+
+---
+
+## Tech Stack
+
+* **Laravel 12**
+* **PHP 8.2+**
+* **PostgreSQL**
+* **Laravel Sanctum**
+* **REST API**
+* **API Versioning**
+* **Laravel Policies / Gates**
+* **Form Requests**
+* **API Resources**
+* **Feature Tests**
+* **Git / GitHub**
 
 ---
 
@@ -15,34 +31,28 @@ Client
 REST API
   │
   ├── Authentication
-  │
   ├── Authorization
-  │
   ├── Services
-  │
   ├── Projects
-  │
   └── Articles
-       │
-       ▼
-Laravel Application
-       │
-       ├── Controllers
-       ├── Form Requests
-       ├── Services
-       ├── Policies
-       ├── Resources
-       └── Models
-              │
-              ▼
-          PostgreSQL
+        │
+        ▼
+   Laravel Application
+        │
+        ├── Controllers
+        ├── Form Requests
+        ├── Services
+        ├── Policies
+        ├── Resources
+        └── Models
+                │
+                ▼
+            PostgreSQL
 ```
 
-### Development Architecture
+### Development Flow
 
-The project follows an incremental and vertical-slice development approach.
-
-Typical feature flow:
+Each feature is developed as a complete vertical slice:
 
 ```text
 Requirement
@@ -76,63 +86,22 @@ Documentation
 
 ---
 
-## Technology Stack
-
-* Laravel 12
-* PHP 8.2+
-* PostgreSQL
-* Laravel Sanctum
-* REST API
-* API versioning with `/api/v1`
-* Form Requests
-* API Resources
-* Policies / Gates
-* Feature Tests
-* PHPUnit / Laravel Testing
-* Git / GitHub
-
----
-
-## Project Goals
-
-The backend is designed to provide:
-
-* Authentication
-* Role-based authorization
-* Service management
-* Portfolio project management
-* Article management
-* Validation
-* Pagination
-* Filtering
-* Sorting
-* Searching
-* Consistent API Resources
-* Automated test coverage
-
-The frontend is planned separately using:
-
-* Next.js
-* TypeScript
-
----
-
 # Requirements
 
-Before running the project, make sure the following are installed:
+Make sure the following are installed:
 
 * PHP 8.2 or newer
 * Composer
 * PostgreSQL
 * Git
 
-Verify PHP:
+Check PHP:
 
 ```bash
 php -v
 ```
 
-Verify Composer:
+Check Composer:
 
 ```bash
 composer -V
@@ -154,7 +123,7 @@ Enter the project directory:
 cd kimiagarsoft-backend
 ```
 
-Install PHP dependencies:
+Install dependencies:
 
 ```bash
 composer install
@@ -163,7 +132,7 @@ composer install
 Create the environment file:
 
 ```bash
-copy .env.example .env
+cp .env.example .env
 ```
 
 Generate the application key:
@@ -172,7 +141,7 @@ Generate the application key:
 php artisan key:generate
 ```
 
-Configure the PostgreSQL database in `.env`.
+Configure the PostgreSQL connection in `.env`.
 
 Example:
 
@@ -207,7 +176,7 @@ Start the Laravel development server:
 php artisan serve
 ```
 
-The API will normally be available at:
+The application will normally be available at:
 
 ```text
 http://127.0.0.1:8000
@@ -219,7 +188,7 @@ The API base path is:
 /api/v1
 ```
 
-Therefore, for example:
+Example:
 
 ```text
 http://127.0.0.1:8000/api/v1/services
@@ -229,7 +198,13 @@ http://127.0.0.1:8000/api/v1/services
 
 # Authentication
 
-Authentication is implemented using Laravel Sanctum.
+Authentication is implemented using **Laravel Sanctum**.
+
+All protected endpoints require:
+
+```http
+Authorization: Bearer YOUR_TOKEN
+```
 
 ## Register
 
@@ -254,13 +229,7 @@ Example request:
 POST /api/v1/auth/login
 ```
 
-The login endpoint returns a Sanctum authentication token.
-
-Use the token in subsequent protected requests:
-
-```http
-Authorization: Bearer YOUR_TOKEN
-```
+A successful login returns an authentication token.
 
 ## Current User
 
@@ -268,7 +237,7 @@ Authorization: Bearer YOUR_TOKEN
 GET /api/v1/auth/me
 ```
 
-Authentication required.
+Requires authentication.
 
 ## Logout
 
@@ -276,22 +245,20 @@ Authentication required.
 POST /api/v1/auth/logout
 ```
 
-Authentication required.
+Requires authentication.
 
-The current authentication token is revoked.
+The current Sanctum token is revoked after logout.
 
 ---
 
 # Authorization
 
-The application currently uses two roles:
+The current application defines two roles:
 
-| Role     | Description                |
-| -------- | -------------------------- |
-| `admin`  | Full administrative access |
-| `author` | Content author             |
-
-Role information is stored through the `users.role_id` relationship.
+| Role     | Description         |
+| -------- | ------------------- |
+| `admin`  | Administrative user |
+| `author` | Content author      |
 
 The `User` model provides:
 
@@ -300,31 +267,49 @@ $user->isAdmin();
 $user->isAuthor();
 ```
 
-Authorization is implemented through Laravel Policies and Gates.
+Authorization is implemented using Laravel Policies and Gates.
 
 ---
 
-# Service Management
+# API Overview
 
-Service management provides CRUD operations for website services.
+All version 1 endpoints use:
 
-All service endpoints require authentication and authorization.
+```text
+/api/v1
+```
+
+| Domain         | Method | Endpoint              |
+| -------------- | ------ | --------------------- |
+| Authentication | POST   | `/auth/register`      |
+| Authentication | POST   | `/auth/login`         |
+| Authentication | GET    | `/auth/me`            |
+| Authentication | POST   | `/auth/logout`        |
+| Services       | GET    | `/services`           |
+| Services       | GET    | `/services/{service}` |
+| Services       | POST   | `/services`           |
+| Services       | PUT    | `/services/{service}` |
+| Services       | DELETE | `/services/{service}` |
+| Projects       | GET    | `/projects`           |
+| Projects       | GET    | `/projects/{project}` |
+| Projects       | POST   | `/projects`           |
+| Projects       | PUT    | `/projects/{project}` |
+| Projects       | DELETE | `/projects/{project}` |
+| Articles       | GET    | `/articles`           |
+| Articles       | GET    | `/articles/{article}` |
+| Articles       | POST   | `/articles`           |
+| Articles       | PUT    | `/articles/{article}` |
+| Articles       | DELETE | `/articles/{article}` |
+
+---
+
+# Services
+
+The Service domain provides CRUD operations for website services.
 
 ## Endpoints
 
-| Method | Endpoint                     | Description    |
-| ------ | ---------------------------- | -------------- |
-| GET    | `/api/v1/services`           | List services  |
-| GET    | `/api/v1/services/{service}` | Show service   |
-| POST   | `/api/v1/services`           | Create service |
-| PUT    | `/api/v1/services/{service}` | Update service |
-| DELETE | `/api/v1/services/{service}` | Delete service |
-
-The current Service Policy allows administrative users to manage services.
-
----
-
-## List Services
+### List Services
 
 ```http
 GET /api/v1/services
@@ -337,33 +322,72 @@ The service listing supports:
 * Sorting
 * Searching
 
-Pagination size:
+The default page size is:
 
 ```text
-10 items per page
+10 records
 ```
 
----
+### Get a Service
 
-## Service Query Parameters
+```http
+GET /api/v1/services/{service}
+```
 
-### Search
+### Create a Service
 
-Search services by supported searchable fields.
+```http
+POST /api/v1/services
+```
 
 Example:
+
+```json
+{
+    "service_category_id": 1,
+    "title": "Web Design",
+    "slug": "web-design",
+    "short_description": "Professional website design services",
+    "description": "Complete website design and development services.",
+    "status": "published",
+    "sort_order": 1,
+    "published_at": "2026-10-01 10:00:00"
+}
+```
+
+### Update a Service
+
+```http
+PUT /api/v1/services/{service}
+```
+
+### Delete a Service
+
+```http
+DELETE /api/v1/services/{service}
+```
+
+Successful deletion returns:
+
+```text
+204 No Content
+```
+
+## Service Querying
+
+### Search
 
 ```text
 GET /api/v1/services?search=web
 ```
 
-### Status Filter
+### Filter by Status
 
 ```text
 GET /api/v1/services?status=published
 ```
 
-### Category Filter
+### Filter by Category
 
 ```text
 GET /api/v1/services?service_category_id=1
@@ -389,112 +413,35 @@ Example:
 GET /api/v1/services?status=published&search=web&page=2
 ```
 
----
+## Service Response
 
-## Get a Service
+Service responses are transformed using `ServiceResource`.
 
-```http
-GET /api/v1/services/{service}
-```
-
-Example:
+Available fields:
 
 ```text
-GET /api/v1/services/1
+id
+service_category_id
+title
+slug
+short_description
+description
+status
+sort_order
+published_at
+created_at
+updated_at
 ```
 
 ---
 
-## Create a Service
+# Projects
 
-```http
-POST /api/v1/services
-```
-
-Example request:
-
-```json
-{
-    "service_category_id": 1,
-    "title": "Web Design",
-    "slug": "web-design",
-    "short_description": "Professional website design services",
-    "description": "Complete website design and development services.",
-    "status": "published",
-    "sort_order": 1,
-    "published_at": "2026-10-01 10:00:00"
-}
-```
-
----
-
-## Update a Service
-
-```http
-PUT /api/v1/services/{service}
-```
-
-The request follows the same validation rules as service creation, while allowing the current record's slug to remain unchanged.
-
----
-
-## Delete a Service
-
-```http
-DELETE /api/v1/services/{service}
-```
-
-Successful deletion returns:
-
-```http
-204 No Content
-```
-
----
-
-## Service Resource
-
-Service responses use `ServiceResource`.
-
-The response contains:
-
-```json
-{
-    "id": 1,
-    "service_category_id": 1,
-    "title": "Web Design",
-    "slug": "web-design",
-    "short_description": "Professional website design services",
-    "description": "Complete website design and development services.",
-    "status": "published",
-    "sort_order": 1,
-    "published_at": "2026-10-01T10:00:00.000000Z",
-    "created_at": "2026-10-01T09:00:00.000000Z",
-    "updated_at": "2026-10-01T09:00:00.000000Z"
-}
-```
-
----
-
-# Portfolio Projects
-
-Projects represent portfolio items displayed by the website.
+The Projects domain manages portfolio projects.
 
 ## Endpoints
 
-| Method | Endpoint                     | Description    |
-| ------ | ---------------------------- | -------------- |
-| GET    | `/api/v1/projects`           | List projects  |
-| GET    | `/api/v1/projects/{project}` | Show project   |
-| POST   | `/api/v1/projects`           | Create project |
-| PUT    | `/api/v1/projects/{project}` | Update project |
-| DELETE | `/api/v1/projects/{project}` | Delete project |
-
-All project endpoints currently require authentication and policy authorization.
-
----
-
-## List Projects
+### List Projects
 
 ```http
 GET /api/v1/projects
@@ -504,7 +451,7 @@ Projects are:
 
 * Ordered by `sort_order`
 * Paginated
-* Limited to 10 records per page
+* Returned 10 records per page
 
 Example:
 
@@ -512,9 +459,13 @@ Example:
 GET /api/v1/projects?page=2
 ```
 
----
+### Get a Project
 
-## Create a Project
+```http
+GET /api/v1/projects/{project}
+```
+
+### Create a Project
 
 ```http
 POST /api/v1/projects
@@ -534,19 +485,13 @@ Example:
 }
 ```
 
----
-
-## Update a Project
+### Update a Project
 
 ```http
 PUT /api/v1/projects/{project}
 ```
 
-The project slug must remain unique.
-
----
-
-## Delete a Project
+### Delete a Project
 
 ```http
 DELETE /api/v1/projects/{project}
@@ -554,185 +499,66 @@ DELETE /api/v1/projects/{project}
 
 Successful deletion returns:
 
-```http
+```text
 204 No Content
 ```
 
----
+## Project Response
 
-## Project Resource
+Project responses are transformed using `ProjectResource`.
 
-Project responses use `ProjectResource`.
+Available fields:
 
-Fields:
-
-```json
-{
-    "id": 1,
-    "title": "Company Website",
-    "slug": "company-website",
-    "short_description": "Corporate website development",
-    "description": "A complete corporate website project.",
-    "status": "published",
-    "sort_order": 1,
-    "published_at": "2026-10-01T10:00:00.000000Z",
-    "created_at": "2026-10-01T09:00:00.000000Z",
-    "updated_at": "2026-10-01T09:00:00.000000Z"
-}
+```text
+id
+title
+slug
+short_description
+description
+status
+sort_order
+published_at
+created_at
+updated_at
 ```
 
 ---
 
 # Articles
 
-Articles provide the content management layer for website articles.
+The Articles domain provides content management functionality.
 
 Articles belong to users through `user_id`.
 
 ## Endpoints
 
-| Method | Endpoint                     | Description    |
-| ------ | ---------------------------- | -------------- |
-| GET    | `/api/v1/articles`           | List articles  |
-| GET    | `/api/v1/articles/{article}` | Show article   |
-| POST   | `/api/v1/articles`           | Create article |
-| PUT    | `/api/v1/articles/{article}` | Update article |
-| DELETE | `/api/v1/articles/{article}` | Delete article |
-
-All article endpoints require authentication and policy authorization.
-
----
-
-# Article Authorization
-
-Article authorization currently distinguishes between administrators and authors.
-
-### Admin
-
-An administrator can manage articles according to the Article Policy.
-
-### Author
-
-An author can:
-
-* Create articles
-* View articles according to policy
-* Update their own articles
-
-The Article Service also restricts the article listing for authors to articles belonging to the authenticated user.
-
-This means an author listing request automatically applies:
-
-```text
-user_id = authenticated_user_id
-```
-
-Administrators are not restricted by this author ownership filter.
-
----
-
-# List Articles
+### List Articles
 
 ```http
 GET /api/v1/articles
 ```
 
-Pagination:
-
-```text
-10 articles per page
-```
-
 The article listing supports:
 
-* Ownership filtering for authors
+* Authorization-based ownership
 * Status filtering
 * Searching
 * Sorting
 * Pagination
 
----
-
-## Article Status Filter
+The default page size is:
 
 ```text
-GET /api/v1/articles?status=published
+10 records
 ```
 
-Supported statuses:
-
-```text
-draft
-published
-```
-
----
-
-## Article Search
-
-Search is performed against:
-
-* `title`
-* `slug`
-
-Example:
-
-```text
-GET /api/v1/articles?search=laravel
-```
-
----
-
-## Article Sorting
-
-Supported sort fields:
-
-```text
-sort_order
-title
-created_at
-```
-
-Example:
-
-```text
-GET /api/v1/articles?sort=title&direction=asc
-```
-
-Direction:
-
-```text
-asc
-desc
-```
-
-Any direction other than `desc` is treated as `asc`.
-
----
-
-## Combined Article Query
-
-Query parameters can be combined.
-
-Example:
-
-```text
-GET /api/v1/articles?status=published&search=laravel&sort=created_at&direction=desc&page=2
-```
-
-For an author, the ownership restriction is applied automatically in addition to the supplied filters.
-
----
-
-## Get an Article
+### Get an Article
 
 ```http
 GET /api/v1/articles/{article}
 ```
 
----
-
-## Create an Article
+### Create an Article
 
 ```http
 POST /api/v1/articles
@@ -752,23 +578,15 @@ Example:
 }
 ```
 
-The authenticated user's ID is automatically assigned to the article as `user_id`.
+The authenticated user's ID is automatically assigned to the article.
 
----
-
-## Update an Article
+### Update an Article
 
 ```http
 PUT /api/v1/articles/{article}
 ```
 
-The slug must remain unique.
-
-The Article Policy determines whether the authenticated user is authorized to update the article.
-
----
-
-## Delete an Article
+### Delete an Article
 
 ```http
 DELETE /api/v1/articles/{article}
@@ -776,43 +594,134 @@ DELETE /api/v1/articles/{article}
 
 Successful deletion returns:
 
-```http
+```text
 204 No Content
 ```
 
 ---
 
-## Article Resource
+# Article Authorization
 
-Article responses use `ArticleResource`.
+Article access is controlled through `ArticlePolicy`.
 
-Fields:
+## Admin
 
-```json
-{
-    "id": 1,
-    "user_id": 1,
-    "title": "Learning Laravel",
-    "slug": "learning-laravel",
-    "short_description": "Introduction to Laravel development",
-    "content": "Article content goes here.",
-    "status": "published",
-    "sort_order": 1,
-    "published_at": "2026-10-01T10:00:00.000000Z",
-    "created_at": "2026-10-01T09:00:00.000000Z",
-    "updated_at": "2026-10-01T09:00:00.000000Z"
-}
+Administrators have administrative article management permissions according to the policy.
+
+## Author
+
+Authors can work with their own articles according to the policy.
+
+When an author requests the article list, the service automatically restricts the query to that author's articles.
+
+Conceptually:
+
+```text
+Author
+  ↓
+GET /api/v1/articles
+  ↓
+Only articles belonging to authenticated user
+```
+
+---
+
+# Article Querying
+
+## Filter by Status
+
+```text
+GET /api/v1/articles?status=published
+```
+
+Supported statuses:
+
+```text
+draft
+published
+```
+
+## Search
+
+Article search is performed against:
+
+* `title`
+* `slug`
+
+Example:
+
+```text
+GET /api/v1/articles?search=laravel
+```
+
+## Sorting
+
+Supported sort fields:
+
+```text
+sort_order
+title
+created_at
+```
+
+Example:
+
+```text
+GET /api/v1/articles?sort=title&direction=asc
+```
+
+Supported directions:
+
+```text
+asc
+desc
+```
+
+## Pagination
+
+```text
+GET /api/v1/articles?page=2
+```
+
+## Combined Query
+
+Query parameters can be combined:
+
+```text
+GET /api/v1/articles?status=published&search=laravel&sort=created_at&direction=desc&page=2
+```
+
+For authors, the ownership restriction is applied automatically in addition to these filters.
+
+---
+
+# Article Response
+
+Article responses are transformed using `ArticleResource`.
+
+Available fields:
+
+```text
+id
+user_id
+title
+slug
+short_description
+content
+status
+sort_order
+published_at
+created_at
+updated_at
 ```
 
 ---
 
 # Validation
 
-Validation is implemented using Laravel Form Requests.
+Validation is implemented through Laravel Form Requests.
 
-Current domains use dedicated validation classes for create and update operations.
-
-Examples:
+Current request classes include:
 
 ```text
 StoreProjectRequest
@@ -822,16 +731,16 @@ StoreArticleRequest
 UpdateArticleRequest
 ```
 
-Common validation rules include:
+Validation includes:
 
-* Required strings
-* Maximum string length
+* Required fields
+* String validation
+* Maximum length
 * Unique slugs
-* Allowed status values
-* Integer sort order
+* Status validation
+* Integer `sort_order`
 * Date validation
 * Nullable descriptions/content
-* Unique slug validation during update while ignoring the current record
 
 Supported content statuses:
 
@@ -840,11 +749,13 @@ draft
 published
 ```
 
+When updating an existing resource, the current record is excluded from the slug uniqueness check.
+
 ---
 
 # API Resources
 
-API responses are standardized through Laravel API Resources.
+The API uses Laravel API Resources to control the response structure.
 
 Current resources:
 
@@ -854,39 +765,15 @@ ProjectResource
 ArticleResource
 ```
 
-Resources define the fields exposed by the API instead of returning raw Eloquent models directly.
-
----
-
-# HTTP Responses
-
-The API uses standard HTTP status codes.
-
-Common responses include:
-
-| Status | Meaning                              |
-| ------ | ------------------------------------ |
-| `200`  | Successful request                   |
-| `201`  | Resource created                     |
-| `204`  | Resource successfully deleted        |
-| `401`  | Authentication required              |
-| `403`  | Authenticated user is not authorized |
-| `404`  | Resource not found                   |
-| `422`  | Validation failed                    |
-
-Protected endpoints require:
-
-```http
-Authorization: Bearer YOUR_TOKEN
-```
+This prevents the API from directly exposing raw Eloquent models.
 
 ---
 
 # Pagination
 
-List endpoints use Laravel pagination.
+List endpoints use Laravel's `LengthAwarePaginator`.
 
-Current page size:
+The current page size is:
 
 ```text
 10 records
@@ -898,7 +785,7 @@ Example:
 GET /api/v1/articles?page=2
 ```
 
-Paginated responses include Laravel pagination metadata such as:
+Paginated responses include standard Laravel pagination metadata such as:
 
 ```json
 {
@@ -911,12 +798,30 @@ Paginated responses include Laravel pagination metadata such as:
 
 ---
 
+# HTTP Status Codes
+
+Common API responses include:
+
+| Status | Meaning                 |
+| ------ | ----------------------- |
+| `200`  | Successful request      |
+| `201`  | Resource created        |
+| `204`  | Resource deleted        |
+| `401`  | Authentication required |
+| `403`  | Authorization denied    |
+| `404`  | Resource not found      |
+| `422`  | Validation failed       |
+
+---
+
 # Testing
 
-The project uses automated tests to verify:
+The project uses automated tests for the main application domains.
+
+Current test coverage includes:
 
 * Authentication
-* Token authentication
+* Sanctum token authentication
 * Authorization
 * Policies
 * CRUD operations
@@ -925,18 +830,11 @@ The project uses automated tests to verify:
 * Filtering
 * Sorting
 * Searching
-* API response resources
-* Article ownership rules
-* Project management
-* Service management
-
-Current full test-suite checkpoint:
-
-```text
-147 passed
-471 assertions
-0 failures
-```
+* API Resources
+* Article ownership
+* Service Management
+* Portfolio Projects
+* Article Management
 
 Run the complete test suite:
 
@@ -944,65 +842,71 @@ Run the complete test suite:
 php artisan test
 ```
 
+Current verified checkpoint:
+
+```text
+147 passed
+471 assertions
+0 failures
+```
+
 ---
 
 # Development Principles
 
-The project follows these principles:
+## Incremental Development
 
-### Incremental Development
+Features are developed as small, complete vertical slices.
 
-Features are implemented in small, complete vertical slices.
+## YAGNI
 
-### YAGNI
+Functionality is implemented when it is actually required.
 
-Avoid implementing functionality before it is actually required.
+## Minimal Refactoring
 
-### Minimal Refactoring
+Unrelated working code is not refactored during feature development.
 
-Do not refactor unrelated working code while implementing a feature.
-
-### Test Before Moving Forward
+## Test Before Moving Forward
 
 A feature should be tested before moving to the next stage.
 
-### No Daily Re-Debugging
+## No Unnecessary Rework
 
-Completed and verified functionality should not be repeatedly reopened without a concrete reason.
+Completed and verified functionality should not be reopened without a concrete reason.
 
-### Documentation Follows Implementation
+## Documentation
 
-Documentation is updated after the actual implementation has been verified.
+Documentation is kept aligned with the actual implementation.
 
 ---
 
-# Current Domains
-
-The current backend contains the following main domains:
+# Current Project Domains
 
 ```text
-Authentication
-    ├── Register
-    ├── Login
-    ├── Current User
-    └── Logout
-
-Authorization
-    ├── Admin
-    └── Author
-
-Services
-    ├── CRUD
-    ├── Pagination
-    ├── Filtering
-    ├── Sorting
-    └── Searching
-
-Projects
-    ├── CRUD
-    └── Pagination
-
-Articles
+KimiagarSoft Backend
+│
+├── Authentication
+│   ├── Register
+│   ├── Login
+│   ├── Current User
+│   └── Logout
+│
+├── Authorization
+│   ├── Admin
+│   └── Author
+│
+├── Services
+│   ├── CRUD
+│   ├── Pagination
+│   ├── Filtering
+│   ├── Sorting
+│   └── Searching
+│
+├── Projects
+│   ├── CRUD
+│   └── Pagination
+│
+└── Articles
     ├── CRUD
     ├── Authorization
     ├── Ownership
@@ -1014,9 +918,9 @@ Articles
 
 ---
 
-# API Base URL
+# API Base Path
 
-All version 1 API endpoints use:
+All version 1 endpoints are available under:
 
 ```text
 /api/v1
@@ -1035,30 +939,21 @@ Examples:
 
 # Repository
 
-The source code is maintained in the KimiagarSoft GitHub repository.
+**GitHub:** `KimiagarSoft/kimiagarsoft-backend`
 
-Repository:
-
-```text
-KimiagarSoft/kimiagarsoft-backend
-```
-
-Main branch:
-
-```text
-main
-```
+**Branch:** `main`
 
 ---
 
 # Project Status
 
-The current backend has completed:
+The following areas are currently implemented:
 
 * Project foundation
 * Database foundation
 * Authentication
-* Authorization and roles
+* Sanctum authentication
+* Role-based authorization
 * Service Management
 * Portfolio Projects
 * Article Management
@@ -1068,7 +963,6 @@ The current backend has completed:
 * Searching
 * API Resources
 * Automated testing
+* API documentation
 
-Documentation is maintained alongside the implementation.
-
-Production-readiness tasks such as deployment configuration and CI/CD are handled separately from the current development phase.
+Production-readiness tasks and CI/CD are intentionally handled separately from the current development phase.
