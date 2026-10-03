@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\InquiryController;
 use App\Http\Controllers\Api\V1\ArticleController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ProjectController;
@@ -14,6 +15,16 @@ Route::prefix('v1')->group(function () {
     // Authentication
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
+
+    // Inquiries
+    Route::post('/inquiries', [InquiryController::class, 'store']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/inquiries', [InquiryController::class, 'index']);
+        Route::get('/inquiries/{inquiry}', [InquiryController::class, 'show']);
+        Route::put('/inquiries/{inquiry}', [InquiryController::class, 'update']);
+        Route::delete('/inquiries/{inquiry}', [InquiryController::class, 'destroy']);
+    });
 
     Route::middleware('auth:sanctum')->group(function () {
 
@@ -70,4 +81,3 @@ Route::prefix('v1')->group(function () {
             ->can('delete', 'article');
     });
 });
-
