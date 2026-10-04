@@ -34,7 +34,8 @@ REST API
   ├── Authorization
   ├── Services
   ├── Projects
-  └── Articles
+  ├── Articles
+  └── Inquiries
         │
         ▼
    Laravel Application
@@ -279,27 +280,32 @@ All version 1 endpoints use:
 /api/v1
 ```
 
-| Domain         | Method | Endpoint              |
-| -------------- | ------ | --------------------- |
-| Authentication | POST   | `/auth/register`      |
-| Authentication | POST   | `/auth/login`         |
-| Authentication | GET    | `/auth/me`            |
-| Authentication | POST   | `/auth/logout`        |
-| Services       | GET    | `/services`           |
-| Services       | GET    | `/services/{service}` |
-| Services       | POST   | `/services`           |
-| Services       | PUT    | `/services/{service}` |
-| Services       | DELETE | `/services/{service}` |
-| Projects       | GET    | `/projects`           |
-| Projects       | GET    | `/projects/{project}` |
-| Projects       | POST   | `/projects`           |
-| Projects       | PUT    | `/projects/{project}` |
-| Projects       | DELETE | `/projects/{project}` |
-| Articles       | GET    | `/articles`           |
-| Articles       | GET    | `/articles/{article}` |
-| Articles       | POST   | `/articles`           |
-| Articles       | PUT    | `/articles/{article}` |
-| Articles       | DELETE | `/articles/{article}` |
+| Domain         | Method | Endpoint               |
+| -------------- | ------ | ---------------------- |
+| Authentication | POST   | `/auth/register`       |
+| Authentication | POST   | `/auth/login`          |
+| Authentication | GET    | `/auth/me`             |
+| Authentication | POST   | `/auth/logout`         |
+| Services       | GET    | `/services`            |
+| Services       | GET    | `/services/{service}`  |
+| Services       | POST   | `/services`            |
+| Services       | PUT    | `/services/{service}`  |
+| Services       | DELETE | `/services/{service}`  |
+| Projects       | GET    | `/projects`            |
+| Projects       | GET    | `/projects/{project}`  |
+| Projects       | POST   | `/projects`            |
+| Projects       | PUT    | `/projects/{project}`  |
+| Projects       | DELETE | `/projects/{project}`  |
+| Articles       | GET    | `/articles`            |
+| Articles       | GET    | `/articles/{article}`  |
+| Articles       | POST   | `/articles`            |
+| Articles       | PUT    | `/articles/{article}`  |
+| Articles       | DELETE | `/articles/{article}`  |
+| Inquiries      | POST   | `/inquiries`           |
+| Inquiries      | GET    | `/inquiries`           |
+| Inquiries      | GET    | `/inquiries/{inquiry}` |
+| Inquiries      | PUT    | `/inquiries/{inquiry}` |
+| Inquiries      | DELETE | `/inquiries/{inquiry}` |
 
 ---
 
@@ -717,6 +723,186 @@ updated_at
 
 ---
 
+# Inquiries / Contact
+
+The Inquiry domain handles contact and inquiry submissions from public visitors.
+
+Public visitors can submit an inquiry without authentication.
+
+Administrative inquiry management requires an authenticated `admin` user.
+
+## Inquiry Fields
+
+| Field     | Type   | Required | Description           |
+| --------- | ------ | -------- | --------------------- |
+| `name`    | string | Yes      | Visitor name          |
+| `email`   | string | Yes      | Visitor email         |
+| `phone`   | string | No       | Optional phone number |
+| `subject` | string | Yes      | Inquiry subject       |
+| `message` | text   | Yes      | Inquiry message       |
+| `status`  | string | Server   | Inquiry status        |
+
+Supported statuses:
+
+```text
+new
+read
+replied
+closed
+```
+
+The initial status is always:
+
+```text
+new
+```
+
+The status is server-controlled during public creation.
+
+## Create Inquiry
+
+Public endpoint:
+
+```http
+POST /api/v1/inquiries
+```
+
+Authentication is not required.
+
+Example:
+
+```json
+{
+    "name": "Test User",
+    "email": "test@example.com",
+    "phone": "09123456789",
+    "subject": "Website Design",
+    "message": "I need a new website for my business."
+}
+```
+
+A successful creation returns:
+
+```text
+201 Created
+```
+
+The resulting inquiry receives:
+
+```json
+{
+    "status": "new"
+}
+```
+
+Any client-supplied status is ignored during creation.
+
+## List Inquiries
+
+Admin only:
+
+```http
+GET /api/v1/inquiries
+```
+
+The endpoint returns inquiries ordered by newest first.
+
+## Get an Inquiry
+
+Admin only:
+
+```http
+GET /api/v1/inquiries/{inquiry}
+```
+
+## Update an Inquiry
+
+Admin only:
+
+```http
+PUT /api/v1/inquiries/{inquiry}
+```
+
+Currently, only the inquiry `status` is editable.
+
+Example:
+
+```json
+{
+    "status": "read"
+}
+```
+
+Supported values:
+
+```text
+new
+read
+replied
+closed
+```
+
+## Delete an Inquiry
+
+Admin only:
+
+```http
+DELETE /api/v1/inquiries/{inquiry}
+```
+
+Successful deletion returns:
+
+```text
+204 No Content
+```
+
+## Inquiry Authorization
+
+Inquiry management is controlled through `InquiryPolicy`.
+
+```text
+Guest
+  └── Create Inquiry
+
+Author
+  └── Cannot manage inquiries
+
+Admin
+  ├── List inquiries
+  ├── View inquiry
+  ├── Update inquiry
+  └── Delete inquiry
+```
+
+The Inquiry domain intentionally does not currently include:
+
+* Email notifications
+* Attachments
+* Spam automation
+* Dashboard functionality
+* External notification services
+
+These can be added later when actually required.
+
+## Inquiry Response
+
+Inquiry responses are transformed using `InquiryResource`.
+
+Available fields:
+
+```text
+id
+name
+email
+phone
+subject
+message
+status
+created_at
+```
+
+---
+
 # Validation
 
 Validation is implemented through Laravel Form Requests.
@@ -729,6 +915,9 @@ UpdateProjectRequest
 
 StoreArticleRequest
 UpdateArticleRequest
+
+StoreInquiryRequest
+UpdateInquiryRequest
 ```
 
 Validation includes:
@@ -740,7 +929,9 @@ Validation includes:
 * Status validation
 * Integer `sort_order`
 * Date validation
-* Nullable descriptions/content
+* Nullable fields
+* Inquiry email validation
+* Inquiry phone length validation
 
 Supported content statuses:
 
@@ -749,7 +940,16 @@ draft
 published
 ```
 
-When updating an existing resource, the current record is excluded from the slug uniqueness check.
+Inquiry statuses:
+
+```text
+new
+read
+replied
+closed
+```
+
+When updating an existing resource, the current record is excluded from the slug uniqueness check where applicable.
 
 ---
 
@@ -763,6 +963,7 @@ Current resources:
 ServiceResource
 ProjectResource
 ArticleResource
+InquiryResource
 ```
 
 This prevents the API from directly exposing raw Eloquent models.
@@ -771,9 +972,9 @@ This prevents the API from directly exposing raw Eloquent models.
 
 # Pagination
 
-List endpoints use Laravel's `LengthAwarePaginator`.
+List endpoints use Laravel's `LengthAwarePaginator` where pagination is implemented.
 
-The current page size is:
+The standard page size for paginated domains is:
 
 ```text
 10 records
@@ -814,6 +1015,16 @@ Common API responses include:
 
 ---
 
+# Error Handling
+
+The API currently relies on Laravel's standard exception and validation handling.
+
+The behavior of authentication, authorization, validation, and not-found responses has been verified through feature tests.
+
+Custom global error-response standardization is intentionally deferred until it provides a concrete benefit to the API.
+
+---
+
 # Testing
 
 The project uses automated tests for the main application domains.
@@ -835,6 +1046,9 @@ Current test coverage includes:
 * Service Management
 * Portfolio Projects
 * Article Management
+* Inquiry / Contact Management
+* Inquiry authorization
+* Inquiry status validation
 
 Run the complete test suite:
 
@@ -842,11 +1056,11 @@ Run the complete test suite:
 php artisan test
 ```
 
-Current verified checkpoint:
+Latest verified checkpoint:
 
 ```text
-147 passed
-471 assertions
+175 passed
+589 assertions
 0 failures
 ```
 
@@ -906,14 +1120,23 @@ KimiagarSoft Backend
 │   ├── CRUD
 │   └── Pagination
 │
-└── Articles
-    ├── CRUD
-    ├── Authorization
-    ├── Ownership
-    ├── Pagination
-    ├── Filtering
-    ├── Sorting
-    └── Searching
+├── Articles
+│   ├── CRUD
+│   ├── Authorization
+│   ├── Ownership
+│   ├── Pagination
+│   ├── Filtering
+│   ├── Sorting
+│   └── Searching
+│
+└── Inquiries
+    ├── Public Creation
+    ├── Admin Listing
+    ├── Admin Viewing
+    ├── Admin Status Updates
+    ├── Admin Deletion
+    ├── Validation
+    └── Authorization
 ```
 
 ---
@@ -933,6 +1156,7 @@ Examples:
 /api/v1/services
 /api/v1/projects
 /api/v1/articles
+/api/v1/inquiries
 ```
 
 ---
@@ -957,12 +1181,29 @@ The following areas are currently implemented:
 * Service Management
 * Portfolio Projects
 * Article Management
+* Inquiry / Contact Management
 * Pagination
 * Filtering
 * Sorting
 * Searching
 * API Resources
+* Validation
 * Automated testing
 * API documentation
+* API versioning
+
+Latest verified test checkpoint:
+
+```text
+175 passed
+589 assertions
+0 failures
+```
+
+Latest Git checkpoint:
+
+```text
+0cede57a feat: add inquiry management domain
+```
 
 Production-readiness tasks and CI/CD are intentionally handled separately from the current development phase.
